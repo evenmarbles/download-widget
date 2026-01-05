@@ -1,465 +1,139 @@
-/**
- * Brochure Popup Widget (iframe modal + UTM + success screen)
- * - Mount: <div data-brochure-widget ...></div>
- * - Opens a modal with iframe (scripts run)
- * - Appends UTM params to iframe URL
- * - Listens for postMessage:
- *    - { type: "VO_IFRAME_HEIGHT", height: number }
- *    - { type: "VO_SUCCESS", message?: string, autocloseMs?: number }
- */
 (function () {
-  "use strict";
+  const STYLE_ID = "brevo-popup-widget-style";
+  const ROOT_ID = "brevo-popup-widget-root";
 
-  const DEFAULTS = {
-    iframeUrl: "", // REQUIRED
-    buttonText: "Download brochure",
-    buttonClass: "",
-    zIndex: 9999,
-    maxWidth: 540,
-    maxHeightVh: 85,
-    overlayClose: true,
-    escClose: true,
-    showCloseButton: true,
-    iframeTitle: "Brochure Signup",
-
-    // Auto-resize iframe height (optional)
-    autoResize: true,
-
-    // Security: restrict allowed message origins (recommended)
-    // Example: ["https://yourdomain.com"]
-    allowedMessageOrigins: [],
-
-    // Success UI
-    successTitle: "Success!",
-    successMessage: "Thanks — your brochure is on the way.",
-    successAutoCloseMs: 2500, // default autoclose if iframe doesn’t specify
-    showSuccessCloseButton: true,
-
-    // UTM defaults (optional; can be overridden by data-utm-*)
-    utm_source: "",
-    utm_medium: "",
-    utm_campaign: "",
-    utm_content: "",
-    utm_term: ""
-  };
-
-  function merge(a, b) {
-    const out = Object.assign({}, a);
-    for (const k in b) out[k] = b[k];
-    return out;
+  function injectStyles() {
+    if (document.getElementById(STYLE_ID)) return;
+    const css = `
+#${ROOT_ID}{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:2147483647}
+#${ROOT_ID}[data-open="true"]{display:flex}
+#${ROOT_ID} .bpw-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55)}
+#${ROOT_ID} .bpw-modal{position:relative;width:min(92vw,540px);height:min(86vh,405px);background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.35)}
+#${ROOT_ID} .bpw-close{position:absolute;top:10px;right:10px;z-index:3;border:0;background:rgba(0,0,0,.55);color:#fff;width:36px;height:36px;border-radius:999px;cursor:pointer;font-size:18px;line-height:36px}
+#${ROOT_ID} iframe{border:0;width:100%;height:100%;display:block}
+#${ROOT_ID} .bpw-success{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:26px;text-align:center}
+#${ROOT_ID}[data-success="true"] iframe{display:none}
+#${ROOT_ID}[data-success="true"] .bpw-success{display:flex}
+#${ROOT_ID} .bpw-card{max-width:520px}
+#${ROOT_ID} .bpw-title{margin:0 0 15px 0;font-size:22px}
+#${ROOT_ID} .bpw-text{margin:0 0 20px 0;font-size:16px;opacity:.85;line-height:1.75}
+#${ROOT_ID} .bpw-email{font-weight:600;word-break:break-word}
+#${ROOT_ID} .bpw-btn{border:1.3px solid #ff7140;border-radius:5px;padding:13px 24px;font-family:Helvetica, sans-serif;font-size:15px;text-transform:capitalize;line-height:1;cursor:pointer;background-color:#fff;color:#3c4858}
+#${ROOT_ID} .bpw-btn:hover{background-color:#ff7140;color:#fff}
+`;
+    const style = document.createElement("style");
+    style.id = STYLE_ID;
+    style.textContent = css;
+    document.head.appendChild(style);
   }
 
-  function toNum(v, fallback) {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : fallback;
+  function ensureRoot() {
+    let root = document.getElementById(ROOT_ID);
+    if (root) return root;
+
+    root = document.createElement("div");
+    root.id = ROOT_ID;
+    root.setAttribute("role", "dialog");
+    root.setAttribute("aria-modal", "true");
+    root.innerHTML = `
+      <div class="bpw-backdrop" data-bpw-close></div>
+      <div class="bpw-modal" role="document">
+        <button class="bpw-close" type="button" aria-label="Close" data-bpw-close>×</button>
+        <iframe title="Brochure download form" loading="eager"></iframe>
+
+        <div class="bpw-success" aria-live="polite">
+          <div class="bpw-card">
+            <h2 class="bpw-title">Brochure successfully sent!</h2>
+            <p class="bpw-text">
+              We&#039;ve sent the Suwannee River Sea Kayak Skills Expedition Brochure to
+              <span class="bpw-email" data-bpw-email></span>.
+              <br/>Check your inbox!
+            </p>
+            <button class="bpw-btn" type="button" data-bpw-close>Close</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(root);
+
+    root.addEventListener("click", (e) => {
+      const t = e.target;
+      if (t && t.matches("[data-bpw-close]")) closePopup();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && root.getAttribute("data-open") === "true") closePopup();
+    });
+
+    return root;
   }
 
-  function parseBool(v, fallback) {
-    if (v === undefined || v === null || v === "") return fallback;
-    return String(v).toLowerCase() !== "false";
-  }
-
-  function buildUrlWithUtm(baseUrl, utm) {
+  function buildUrlWithUtm(url, utmSource) {
+    if (!utmSource) return url;
     try {
-      const u = new URL(baseUrl, window.location.href);
-
-      // Only set if value is provided (don’t overwrite existing params unless you want to)
-      const map = {
-        utm_source: utm.utm_source,
-        utm_medium: utm.utm_medium,
-        utm_campaign: utm.utm_campaign,
-        utm_content: utm.utm_content,
-        utm_term: utm.utm_term
-      };
-
-      Object.keys(map).forEach((k) => {
-        const val = map[k];
-        if (val) u.searchParams.set(k, val);
-      });
-
+      const u = new URL(url, window.location.href);
+      u.searchParams.set("utm_source", utmSource);
       return u.toString();
-    } catch (e) {
-      // Fallback: if URL() fails for any reason, return original
-      return baseUrl;
+    } catch (_) {
+      // If URL is relative or invalid, fallback
+      const sep = url.includes("?") ? "&" : "?";
+      return url + sep + "utm_source=" + encodeURIComponent(utmSource);
     }
   }
 
-  function buildModal(opts) {
-    let overlay = document.getElementById("vo-brochure-modal");
-    if (overlay) return overlay;
+  function openPopup(formUrl, utmSource) {
+    injectStyles();
+    const root = ensureRoot();
+    const iframe = root.querySelector("iframe");
 
-    overlay = document.createElement("div");
-    overlay.id = "vo-brochure-modal";
-    overlay.setAttribute("role", "dialog");
-    overlay.setAttribute("aria-modal", "true");
-    overlay.setAttribute("aria-hidden", "true");
-    overlay.style.cssText = `
-      position: fixed;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-      background: rgba(0,0,0,0.6);
-      z-index: ${opts.zIndex};
-    `;
+    root.setAttribute("data-success", "false");
+    root.setAttribute("data-open", "true");
+    document.documentElement.style.overflow = "hidden";
 
-    const panel = document.createElement("div");
-    panel.id = "vo-brochure-panel";
-    panel.style.cssText = `
-      position: relative;
-      width: min(${opts.maxWidth}px, 100%);
-      height: min(${opts.maxHeightVh}vh, 435px);
-      background: #fff;
-      border-radius: 14px;
-      box-shadow: 0 18px 60px rgba(0,0,0,0.35);
-      overflow: hidden;
-    `;
-
-    const header = document.createElement("div");
-    header.style.cssText = `
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding: 25px 25px 5px;
-      background: #fff;
-      height: 59px;
-      box-sizing: border-box;
-    `;
-
-    const headerText = document.createElement("div");
-    headerText.type = "div";
-    headerText.style.cssText = `
-      width: 100%;
-      height: 38px;
-      padding: 0 0 0 16px;
-      font-family: Poppins, sans-serif;
-      font-size: 20px;
-      font-weight: 700;
-      color: #4f5758;
-      text-transform: capitalize;
-      line-height: 1;
-      display: grid;
-      align-items: center;
-    `;
-    headerText.textContent = "Download Brochure";
-    header.appendChild(headerText);
-    
-    const closeBtn = document.createElement("button");
-    closeBtn.type = "button";
-    closeBtn.setAttribute("aria-label", "Close popup");
-    closeBtn.style.cssText = `
-      width: 38px;
-      height: 38px;
-      border-radius: 999px;
-      border: 1px solid rgba(0,0,0,0.15);
-      background: #fff;
-      cursor: pointer;
-      font-size: 20px;
-      line-height: 1;
-      display: grid;
-      place-items: center;
-    `;
-    closeBtn.textContent = "×";
-    if (opts.showCloseButton) header.appendChild(closeBtn);
-
-    const body = document.createElement("div");
-    body.id = "vo-brochure-body";
-    body.style.cssText = `
-      width: 100%;
-      height: calc(100% - 59px);
-      background: #fff;
-      position: relative;
-    `;
-
-    // Iframe view
-    const iframeWrap = document.createElement("div");
-    iframeWrap.id = "vo-brochure-iframe-wrap";
-    iframeWrap.style.cssText = `width:100%; height:100%;`;
-
-    const iframe = document.createElement("iframe");
-    iframe.id = "vo-brochure-iframe";
-    iframe.title = opts.iframeTitle;
-    iframe.setAttribute("frameborder", "0");
-    iframe.setAttribute("loading", "lazy");
-    iframe.style.cssText = `
-      width: 100%;
-      height: 100%;
-      border: 0;
-      display: block;
-    `;
-    iframeWrap.appendChild(iframe);
-
-    // Success view (hidden by default)
-    const success = document.createElement("div");
-    success.id = "vo-brochure-success";
-    success.style.cssText = `
-      position: absolute;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 22px;
-      background: #fff;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      text-align: center;
-    `;
-
-    const successCard = document.createElement("div");
-    successCard.style.cssText = `
-      width: min(520px, 100%);
-      border: 1px solid rgba(0,0,0,0.08);
-      border-radius: 14px;
-      padding: 18px;
-      box-shadow: 0 10px 35px rgba(0,0,0,0.08);
-    `;
-
-    const successH = document.createElement("div");
-    successH.id = "vo-success-title";
-    successH.style.cssText = `font-weight: 800; font-size: 20px; margin-bottom: 8px;`;
-    successH.textContent = opts.successTitle;
-
-    const successP = document.createElement("div");
-    successP.id = "vo-success-message";
-    successP.style.cssText = `opacity: 0.85; font-size: 14px; line-height: 1.4; margin-bottom: 14px;`;
-    successP.textContent = opts.successMessage;
-
-    const successClose = document.createElement("button");
-    successClose.type = "button";
-    successClose.textContent = "Close";
-    successClose.style.cssText = `
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 14px;
-      border-radius: 10px;
-      border: 1px solid rgba(0,0,0,0.18);
-      background: #111;
-      color: #fff;
-      font-weight: 700;
-      cursor: pointer;
-    `;
-    if (!opts.showSuccessCloseButton) successClose.style.display = "none";
-
-    successCard.appendChild(successH);
-    successCard.appendChild(successP);
-    successCard.appendChild(successClose);
-    success.appendChild(successCard);
-
-    body.appendChild(iframeWrap);
-    body.appendChild(success);
-
-    panel.appendChild(header);
-    panel.appendChild(body);
-    overlay.appendChild(panel);
-    document.body.appendChild(overlay);
-
-    let autoCloseTimer = null;
-
-    function clearAutoClose() {
-      if (autoCloseTimer) {
-        clearTimeout(autoCloseTimer);
-        autoCloseTimer = null;
-      }
-    }
-
-    function hideModal() {
-      clearAutoClose();
-      overlay.style.display = "none";
-      overlay.setAttribute("aria-hidden", "true");
-
-      // Reset views
-      const s = document.getElementById("vo-brochure-success");
-      const wrap = document.getElementById("vo-brochure-iframe-wrap");
-      if (s) s.style.display = "none";
-      if (wrap) wrap.style.display = "block";
-
-      // Clear iframe src (prevents background activity; comment out if you want state preserved)
-      const fr = document.getElementById("vo-brochure-iframe");
-      if (fr) fr.src = "about:blank";
-    }
-
-    function showModal() {
-      overlay.style.display = "flex";
-      overlay.setAttribute("aria-hidden", "false");
-      if (opts.showCloseButton) closeBtn.focus();
-    }
-
-    function showSuccess(message, autocloseMs) {
-      clearAutoClose();
-
-      const s = document.getElementById("vo-brochure-success");
-      const wrap = document.getElementById("vo-brochure-iframe-wrap");
-      const msgEl = document.getElementById("vo-success-message");
-      const titleEl = document.getElementById("vo-success-title");
-
-      if (wrap) wrap.style.display = "none";
-      if (s) s.style.display = "flex";
-
-      if (titleEl) titleEl.textContent = opts.successTitle;
-      if (msgEl) msgEl.textContent = message || opts.successMessage;
-
-      const ms = toNum(autocloseMs, opts.successAutoCloseMs);
-      if (ms > 0) autoCloseTimer = setTimeout(hideModal, ms);
-    }
-
-    // Attach to overlay for external access
-    overlay.__voShow = showModal;
-    overlay.__voHide = hideModal;
-    overlay.__voShowSuccess = showSuccess;
-
-    // Close handlers
-    if (opts.showCloseButton) closeBtn.addEventListener("click", hideModal);
-    successClose.addEventListener("click", hideModal);
-
-    if (opts.overlayClose) {
-      overlay.addEventListener("click", (e) => {
-        if (e.target === overlay) hideModal();
-      });
-    }
-
-    if (opts.escClose) {
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && overlay.style.display === "flex") hideModal();
-      });
-    }
-
-    return overlay;
+    iframe.src = buildUrlWithUtm(formUrl, utmSource || "");
+    iframe.focus();
   }
 
-  function setIframeSrc(url) {
-    const iframe = document.getElementById("vo-brochure-iframe");
-    if (!iframe) return;
-    iframe.src = url;
+  function closePopup() {
+    const root = document.getElementById(ROOT_ID);
+    if (!root) return;
+    const iframe = root.querySelector("iframe");
+    root.setAttribute("data-open", "false");
+    root.setAttribute("data-success", "false");
+    document.documentElement.style.overflow = "";
+    iframe.src = "about:blank";
   }
 
-  function initPostMessageHandlers(opts) {
-    window.addEventListener("message", (event) => {
-      // origin allowlist (recommended)
-      if (Array.isArray(opts.allowedMessageOrigins) && opts.allowedMessageOrigins.length) {
-        if (!opts.allowedMessageOrigins.includes(event.origin)) return;
-      }
+  // Listen for success from iframe (sent by brevo-form.html)
+  window.addEventListener("message", (event) => {
+    console.log(event);
+    if (!event || !event.data || event.data.type !== "BREVO_SUCCESS") return;
+    const root = document.getElementById(ROOT_ID);
+    if (!root) return;
 
-      if (!event.data || typeof event.data !== "object") return;
+    const email = (event.data.email || "").trim() || "your email";
+    const emailEl = root.querySelector("[data-bpw-email]");
+    if (emailEl) emailEl.textContent = email;
 
-      // Resize
-      if (opts.autoResize && event.data.type === "VO_IFRAME_HEIGHT") {
-        const iframe = document.getElementById("vo-brochure-iframe");
-        const body = document.getElementById("vo-brochure-body");
-        if (!iframe || !body) return;
+    root.setAttribute("data-success", "true");
+  });
 
-        const h = toNum(event.data.height, 0);
-        if (h > 0) {
-          const max = body.clientHeight; // already excludes header
-          iframe.style.height = Math.min(h, max) + "px";
-        }
-        return;
-      }
+  // Bind buttons:
+  // <button data-brevo-popup data-brevo-form-url="https://.../brevo-form.html" data-utm-source="...">Download</button>
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-brevo-popup]");
+    if (!btn) return;
+    e.preventDefault();
 
-      // Success
-      if (event.data.type === "VO_SUCCESS") {
-        const overlay = document.getElementById("vo-brochure-modal");
-        if (!overlay || typeof overlay.__voShowSuccess !== "function") return;
-
-        const message = typeof event.data.message === "string" ? event.data.message : "";
-        const autocloseMs = event.data.autocloseMs;
-        overlay.__voShowSuccess(message, autocloseMs);
-      }
-    });
-  }
-
-  function initOne(el) {
-    const d = el.dataset || {};
-
-    const opts = merge(DEFAULTS, {
-      iframeUrl: d.iframeUrl || d.popupUrl || DEFAULTS.iframeUrl,
-      buttonText: d.buttonText || DEFAULTS.buttonText,
-      buttonClass: d.buttonClass || DEFAULTS.buttonClass,
-      zIndex: d.zIndex ? toNum(d.zIndex, DEFAULTS.zIndex) : DEFAULTS.zIndex,
-      maxWidth: d.maxWidth ? toNum(d.maxWidth, DEFAULTS.maxWidth) : DEFAULTS.maxWidth,
-      maxHeightVh: d.maxHeightVh ? toNum(d.maxHeightVh, DEFAULTS.maxHeightVh) : DEFAULTS.maxHeightVh,
-      overlayClose: parseBool(d.overlayClose, DEFAULTS.overlayClose),
-      escClose: parseBool(d.escClose, DEFAULTS.escClose),
-      showCloseButton: parseBool(d.showCloseButton, DEFAULTS.showCloseButton),
-      iframeTitle: d.iframeTitle || DEFAULTS.iframeTitle,
-
-      autoResize: parseBool(d.autoResize, DEFAULTS.autoResize),
-      allowedMessageOrigins: d.allowedMessageOrigins
-        ? d.allowedMessageOrigins.split(",").map((s) => s.trim()).filter(Boolean)
-        : DEFAULTS.allowedMessageOrigins,
-
-      successTitle: d.successTitle || DEFAULTS.successTitle,
-      successMessage: d.successMessage || DEFAULTS.successMessage,
-      successAutoCloseMs: d.successAutoCloseMs ? toNum(d.successAutoCloseMs, DEFAULTS.successAutoCloseMs) : DEFAULTS.successAutoCloseMs,
-      showSuccessCloseButton: parseBool(d.showSuccessCloseButton, DEFAULTS.showSuccessCloseButton),
-
-      // UTM from data-utm-*
-      utm_source: d.utmSource || DEFAULTS.utm_source,
-      utm_medium: d.utmMedium || DEFAULTS.utm_medium,
-      utm_campaign: d.utmCampaign || DEFAULTS.utm_campaign,
-      utm_content: d.utmContent || DEFAULTS.utm_content,
-      utm_term: d.utmTerm || DEFAULTS.utm_term
-    });
-
-    if (!opts.iframeUrl) {
-      el.innerHTML = `<div style="font-family:system-ui;color:#b00020;">
-        Brochure widget error: <code>data-iframe-url</code> is required.
-      </div>`;
+    const formUrl = btn.getAttribute("data-brevo-form-url");
+    if (!formUrl) {
+      console.error("Brevo Popup: missing data-brevo-form-url on trigger button.");
       return;
     }
 
-    const overlay = buildModal(opts);
-    initPostMessageHandlers(opts);
+    const utm = btn.getAttribute("data-utm-source") || "";
+    openPopup(formUrl, utm);
+  });
 
-    // Render button
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.textContent = opts.buttonText;
-    btn.style.cssText = `
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding:12px 16px;
-      border-radius:999px;
-      border:1px solid rgba(0,0,0,0.18);
-      background:#0b5fff;
-      color:#fff;
-      font:600 14px/1 system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      cursor:pointer;
-    `;
-    if (opts.buttonClass) btn.className = opts.buttonClass;
-
-    btn.addEventListener("click", () => {
-      // Reset success view each open
-      const s = document.getElementById("vo-brochure-success");
-      const wrap = document.getElementById("vo-brochure-iframe-wrap");
-      if (s) s.style.display = "none";
-      if (wrap) wrap.style.display = "block";
-
-      const urlWithUtm = buildUrlWithUtm(opts.iframeUrl, opts);
-      setIframeSrc(urlWithUtm);
-      overlay.__voShow();
-    });
-
-    el.innerHTML = "";
-    el.appendChild(btn);
-  }
-
-  function initAll() {
-    document.querySelectorAll("[data-brochure-widget]").forEach(initOne);
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initAll);
-  } else {
-    initAll();
-  }
-
-  window.BrochurePopupWidget = { init: initAll };
+  window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
-
-
-
-
-
-
