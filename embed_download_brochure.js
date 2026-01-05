@@ -109,7 +109,7 @@
     panel.style.cssText = `
       position: relative;
       width: min(${opts.maxWidth}px, 100%);
-      height: min(${opts.maxHeightVh}vh, 900px);
+      height: min(${opts.maxHeightVh}vh, 485px);
       background: #fff;
       border-radius: 14px;
       box-shadow: 0 18px 60px rgba(0,0,0,0.35);
@@ -128,6 +128,19 @@
       box-sizing: border-box;
     `;
 
+    const headerText = document.createElement("div");
+    headerText.type = "div";
+    headerText.style.cssText = `
+      width: 38px;
+      height: 38px;
+      font-size: 20px;
+      line-height: 1;
+      display: grid;
+      place-items: center;
+    `;
+    headerText.textContent = "Download Brochure";
+    header.appendChild(headerText);
+    
     const closeBtn = document.createElement("button");
     closeBtn.type = "button";
     closeBtn.setAttribute("aria-label", "Close popup");
@@ -440,3 +453,4 @@
 
   window.BrochurePopupWidget = { init: initAll };
 })();
+
