@@ -121,7 +121,6 @@
       console.log(event.data.type);
       const root = document.getElementById(ROOT_ID);
       if (!root) return;
-      console.log(root);
 
       const iframe = root.querySelector("iframe");
       if (!iframe) return;
@@ -171,6 +170,7 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
 
 
 
