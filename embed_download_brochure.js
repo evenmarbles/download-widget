@@ -10,7 +10,8 @@
 #${ROOT_ID} .bpw-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55)}
 #${ROOT_ID} .bpw-modal{position:relative;width:min(92vw,540px);height:auto;max-height:86vh;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.35)}
 #${ROOT_ID} .bpw-close{position:absolute;top:10px;right:10px;z-index:3;border:0;background:rgba(0,0,0,.55);color:#fff;width:36px;height:36px;border-radius:999px;cursor:pointer;font-size:18px;line-height:36px}
-#${ROOT_ID} iframe{border:0;width:100%;height:420px;display:block}
+#${ROOT_ID} .bpw-framewrap{padding:0 0 25px 0}
+#${ROOT_ID} iframe{border:0;width:100%;height:395px;display:block}
 #${ROOT_ID} .bpw-success{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:26px;text-align:center}
 #${ROOT_ID}[data-success="true"] iframe{display:none}
 #${ROOT_ID}[data-success="true"] .bpw-success{display:flex}
@@ -39,7 +40,9 @@
       <div class="bpw-backdrop" data-bpw-close></div>
       <div class="bpw-modal" role="document">
         <button class="bpw-close" type="button" aria-label="Close" data-bpw-close>×</button>
-        <iframe title="Brochure download form" loading="eager"></iframe>
+        <div class=bpw-framewrap>
+          <iframe title="Brochure download form" loading="eager"></iframe>
+        </div>
 
         <div class="bpw-success" aria-live="polite">
           <div class="bpw-card">
@@ -98,7 +101,7 @@
     document.documentElement.style.overflow = "hidden";
 
     iframe.src = buildUrlWithUtm(formUrl, utmSource || "");
-    iframe.style.height = "420px";
+    iframe.style.height = "395px";
     iframe.focus();
   }
 
@@ -127,10 +130,9 @@
       const raw = Number(event.data.height);
       if (!Number.isFinite(raw) || raw <= 0) return;
 
-      // Padding inside modal + keep within viewport
-      const extra = 20; // breathing room
+      // // Padding inside modal + keep within viewport
       const max = Math.floor(window.innerHeight * 0.86);
-      const newH = Math.min(Math.max(raw + extra, 240), max);
+      const newH = Math.min(Math.max(raw, 240), max);
 
       iframe.style.height = newH + "px";
       return;
@@ -168,9 +170,3 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
-
-
-
-
-
-
