@@ -18,8 +18,8 @@
 #${ROOT_ID} .bpw-title{margin:0 0 15px 0;font-size:22px}
 #${ROOT_ID} .bpw-text{margin:0 0 20px 0;font-size:16px;opacity:.85;line-height:1.75}
 #${ROOT_ID} .bpw-email{font-weight:600;word-break:break-word}
-#${ROOT_ID} .bpw-btn{border:1.3px solid #ff7140;border-radius:5px;padding:13px 24px;font-family:Helvetica, sans-serif;font-size:15px;text-transform:capitalize;line-height:1;cursor:pointer;background-color:#fff;color:#3c4858}
-#${ROOT_ID} .bpw-btn:hover{background-color:#ff7140;color:#fff}
+#${ROOT_ID} .bpw-btn{border:1.3px solid #1775ba;border-radius:5px;padding:13px 24px;font-family:Helvetica, sans-serif;font-size:15px;text-transform:capitalize;line-height:1;cursor:pointer;background-color:#fff;color:#3c4858}
+#${ROOT_ID} .bpw-btn:hover{background-color:#1775ba;color:#fff}
 `;
     const style = document.createElement("style");
     style.id = STYLE_ID;
@@ -44,6 +44,13 @@
         <div class="bpw-success" aria-live="polite">
           <div class="bpw-card">
             <h2 class="bpw-title">Brochure successfully sent!</h2>
+            <div style="text-align: center; margin-top: 15px;">
+              <svg width="104" height="100" viewBox="0 0 104 100" class="tw-inline tw-align-baseline wt-icon" style="width: 80px; height: 80px;">
+                <g stroke-width="3" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round"><path d="M91.16 34.168A46.13 46.13 0 0194.728 52c0 25.678-20.685 46.364-46.363 46.364C22.685 98.364 2 77.678 2 52 2 26.322 22.685 5.636 48.364 5.636c9.094 0 17.653 2.675 24.786 7.133" stroke="#DDDEDF">
+                  </path><path stroke="#1775ba" d="M29.273 37.152l18.182 17.575L102 2"></path>
+                </g>
+              </svg>
+            </div>
             <p class="bpw-text">
               We&#039;ve sent the Suwannee River Sea Kayak Skills Expedition Brochure to
               <span class="bpw-email" data-bpw-email></span>.
