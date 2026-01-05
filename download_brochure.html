@@ -71,12 +71,12 @@
       font-family:Helvetica, sans-serif; 
       color:#FFFFFF; 
       padding:13px 24px;
-      background-color:#ff7140; 
+      background-color:#1775ba; 
       border-radius:5px; 
       border-width:0px;
     }
     .submit-button:hover {
-      border:1.3px solid #ff7140;
+      border:1.3px solid #1775ba;
       border-radius:5px;
       background-color: #fff;
       color: #3c4858;
@@ -280,41 +280,6 @@
         attributeFilter: ["style", "class", "hidden", "aria-hidden"]
       });
     })();
-
-    // // ---- Bridge: send success + email to parent ----
-    // // 1) If you want UTM passthrough, set it from querystring:
-    // (function () {
-    //   const params = new URLSearchParams(location.search);
-    //   const utm = params.get("utm_source") || "";
-    //   const utmEl = document.getElementById("UTM_SOURCE");
-    //   if (utmEl) utmEl.value = utm;
-    // })();
-
-    // // 2) Watch Brevo's built-in success panel, then postMessage to parent
-    // (function () {
-    //   const successEl = document.getElementById("success-message");
-    //   if (!successEl) return;
-
-    //   const getEmail = () => {
-    //     const emailInput = document.getElementById("EMAIL") || document.querySelector('input[name="EMAIL"]');
-    //     console.log(emailInput);
-    //     return emailInput && emailInput.value ? String(emailInput.value).trim() : "";
-    //   };
-
-    //   const notifyParent = () => {
-    //     const email = getEmail();
-    //     window.parent.postMessage({ type: "BREVO_SUCCESS", email: email }, "*");
-    //   };
-
-    //   // If Brevo toggles display/visibility or classes, MutationObserver catches it
-    //   const obs = new MutationObserver(() => {
-    //     const style = window.getComputedStyle(successEl);
-    //     const visible = style && style.display !== "none" && style.visibility !== "hidden" && style.opacity !== "0";
-    //     if (visible) notifyParent();
-    //   });
-
-    //   obs.observe(successEl, { attributes: true, attributeFilter: ["style", "class", "hidden", "aria-hidden"] });
-    // })();
   </script>
 
   <!-- Brevo-required globals (from your snippet) -->
