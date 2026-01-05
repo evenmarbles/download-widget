@@ -121,7 +121,7 @@
       display: flex;
       align-items: center;
       justify-content: flex-end;
-      padding: 25 25 0 25px;
+      padding: 25px 25px 0 25px;
       background: #fff;
       height: 59px;
       box-sizing: border-box;
@@ -132,7 +132,7 @@
     headerText.style.cssText = `
       width: 100%;
       height: 38px;
-      padding: 0 0 0 32;
+      padding: 0 0 0 32px;
       font-family: Poppins, "sans-serif";
       font-size: 20px;
       font-weight: 500;
@@ -458,5 +458,6 @@
 
   window.BrochurePopupWidget = { init: initAll };
 })();
+
 
 
