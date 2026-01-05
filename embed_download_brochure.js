@@ -121,8 +121,7 @@
       display: flex;
       align-items: center;
       justify-content: flex-end;
-      padding: 10px;
-      border-bottom: 1px solid rgba(0,0,0,0.08);
+      padding: 25 25 0 25px;
       background: #fff;
       height: 59px;
       box-sizing: border-box;
@@ -131,12 +130,18 @@
     const headerText = document.createElement("div");
     headerText.type = "div";
     headerText.style.cssText = `
-      width: 38px;
+      width: 100%;
       height: 38px;
+      padding: 0 0 0 32;
+      font-family: Poppins, "sans-serif";
       font-size: 20px;
+      font-weight: 500;
+      color: #4f5758;
+      text-transform: capitalize;
       line-height: 1;
       display: grid;
-      place-items: center;
+      text-algin: left;
+      aglin-items: center;
     `;
     headerText.textContent = "Download Brochure";
     header.appendChild(headerText);
@@ -453,4 +458,5 @@
 
   window.BrochurePopupWidget = { init: initAll };
 })();
+
 
