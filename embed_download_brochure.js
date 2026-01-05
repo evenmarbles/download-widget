@@ -135,7 +135,7 @@
       padding: 0 0 0 16px;
       font-family: Poppins, sans-serif;
       font-size: 20px;
-      font-weight: 500;
+      font-weight: 700;
       color: #4f5758;
       text-transform: capitalize;
       line-height: 1;
@@ -457,6 +457,7 @@
 
   window.BrochurePopupWidget = { init: initAll };
 })();
+
 
 
 
