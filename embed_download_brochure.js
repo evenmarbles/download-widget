@@ -120,6 +120,7 @@
     if (event.data.type === "BREVO_HEIGHT") {
       console.log(event.data.type);
       const root = document.getElementById(ROOT_ID);
+      console.log(root);
       if (!root) return;
 
       const iframe = root.querySelector("iframe");
@@ -170,4 +171,5 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
 
