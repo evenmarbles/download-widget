@@ -81,6 +81,33 @@
       background-color: #fff;
       color: #3c4858;
     }
+    .sib-form .entry__error {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background-color: #f70;
+      border-radius: 5px;
+      color: #fff;
+      display: inline-block;
+      font-family: Helvetica, sans-serif;
+      font-weight: 600;
+      margin-top: 10px;
+      padding: 4px 12px;
+      position: relative;
+      margin-bottom: 0;
+    }
+    .entry__error::before {
+        border-bottom: 7px solid #f70;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        content: "";
+        display: block;
+        height: 0;
+        left: 10px;
+        position: absolute;
+        top: -6px;
+        -moz-transform: scale(.9999);
+        width: 0;
+    }
   </style>
 
   <link rel="stylesheet" href="sib-styles.css">
@@ -147,8 +174,7 @@
                     </div>
                   </div>
 
-                  <label class="entry__error entry__error--primary"
-                    style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;">
+                  <label class="entry__error entry__error--primary">
                   </label>
                 </div>
               </div>
@@ -164,8 +190,7 @@
                     </div>
                   </div>
 
-                  <label class="entry__error entry__error--primary"
-                    style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;">
+                  <label class="entry__error entry__error--primary">
                   </label>
                 </div>
               </div>
@@ -182,8 +207,7 @@
                   </div>
                 </div>
 
-                <label class="entry__error entry__error--primary"
-                  style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;">
+                <label class="entry__error entry__error--primary">
                 </label>
               </div>
             </div>
@@ -237,8 +261,11 @@
 
       function postHeight() {
         var h = getDocHeight();
-        console.log(h);
         if (!h || !isFinite(h)) return;
+          
+        // Padding inside modal + keep within viewport
+        // const extra = 20; // breathing room
+        // const newH = h + extra;
 
         // Avoid spamming tiny changes
         if (Math.abs(h - lastSent) < 4) return;
@@ -384,4 +411,3 @@
 </body>
 
 </html>
-
