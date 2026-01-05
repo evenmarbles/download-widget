@@ -109,7 +109,7 @@
     panel.style.cssText = `
       position: relative;
       width: min(${opts.maxWidth}px, 100%);
-      height: min(${opts.maxHeightVh}vh, 485px);
+      height: min(${opts.maxHeightVh}vh, 435px);
       background: #fff;
       border-radius: 14px;
       box-shadow: 0 18px 60px rgba(0,0,0,0.35);
@@ -457,6 +457,7 @@
 
   window.BrochurePopupWidget = { init: initAll };
 })();
+
 
 
 
