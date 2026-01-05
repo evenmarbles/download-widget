@@ -8,9 +8,9 @@
 #${ROOT_ID}{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:2147483647}
 #${ROOT_ID}[data-open="true"]{display:flex}
 #${ROOT_ID} .bpw-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55)}
-#${ROOT_ID} .bpw-modal{position:relative;width:min(92vw,540px);height:min(86vh,405px);background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.35)}
+#${ROOT_ID} .bpw-modal{position:relative;width:min(92vw,540px);height:auto;max-height:86vh;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.35)}
 #${ROOT_ID} .bpw-close{position:absolute;top:10px;right:10px;z-index:3;border:0;background:rgba(0,0,0,.55);color:#fff;width:36px;height:36px;border-radius:999px;cursor:pointer;font-size:18px;line-height:36px}
-#${ROOT_ID} iframe{border:0;width:100%;height:100%;display:block}
+#${ROOT_ID} iframe{border:0;width:100%;height:420px;display:block}
 #${ROOT_ID} .bpw-success{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:26px;text-align:center}
 #${ROOT_ID}[data-success="true"] iframe{display:none}
 #${ROOT_ID}[data-success="true"] .bpw-success{display:flex}
@@ -98,6 +98,7 @@
     document.documentElement.style.overflow = "hidden";
 
     iframe.src = buildUrlWithUtm(formUrl, utmSource || "");
+    iframe.style.height = "420px";
     iframe.focus();
   }
 
@@ -113,16 +114,39 @@
 
   // Listen for success from iframe (sent by brevo-form.html)
   window.addEventListener("message", (event) => {
-    console.log(event);
-    if (!event || !event.data || event.data.type !== "BREVO_SUCCESS") return;
-    const root = document.getElementById(ROOT_ID);
-    if (!root) return;
+    if (!event || !event.data) return;
 
-    const email = (event.data.email || "").trim() || "your email";
-    const emailEl = root.querySelector("[data-bpw-email]");
-    if (emailEl) emailEl.textContent = email;
+    // Resize message from brevo-form.html
+    if (event.data.type === "BREVO_HEIGHT") {
+      const root = document.getElementById(ROOT_ID);
+      if (!root) return;
 
-    root.setAttribute("data-success", "true");
+      const iframe = root.querySelector("iframe");
+      if (!iframe) return;
+
+      const raw = Number(event.data.height);
+      if (!Number.isFinite(raw) || raw <= 0) return;
+
+      // Padding inside modal + keep within viewport
+      const extra = 20; // breathing room
+      const max = Math.floor(window.innerHeight * 0.86);
+      const newH = Math.min(Math.max(raw + extra, 240), max);
+
+      iframe.style.height = newH + "px";
+      return;
+    }
+    
+    // Existing success handler
+    if (event.data.type === "BREVO_SUCCESS") {
+      const root = document.getElementById(ROOT_ID);
+      if (!root) return;
+
+      const email = (event.data.email || "").trim() || "your email";
+      const emailEl = root.querySelector("[data-bpw-email]");
+      if (emailEl) emailEl.textContent = email;
+
+      root.setAttribute("data-success", "true");
+    }
   });
 
   // Bind buttons:
