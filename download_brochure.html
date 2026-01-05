@@ -214,32 +214,12 @@
 
   <script defer src="https://sibforms.com/forms/end-form/build/main.js"></script>
 
-  <script>
-      (function () {
-        function sendHeight() {
-          var h = Math.max(
-            document.documentElement.scrollHeight,
-            document.body.scrollHeight
-          );
-          parent.postMessage({ type: "VO_IFRAME_HEIGHT", height: h }, "*");
-        }
-
-        // Initial + on resize/content changes
-        window.addEventListener("load", sendHeight);
-        window.addEventListener("resize", sendHeight);
-
-        // If your popup changes dynamically (accordions, validation, etc.)
-        var obs = new MutationObserver(function () { sendHeight(); });
-        obs.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
-      })();
-  </script>
-
-
   <!-- END - We recommend to place the above code in footer or bottom of your website html  -->
 </body>
 
 
 </html>
+
 
 
 
