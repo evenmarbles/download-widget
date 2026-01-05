@@ -118,6 +118,7 @@
 
     // Resize message from brevo-form.html
     if (event.data.type === "BREVO_HEIGHT") {
+      console.log(event.data.type);
       const root = document.getElementById(ROOT_ID);
       if (!root) return;
 
@@ -133,6 +134,7 @@
       const newH = Math.min(Math.max(raw + extra, 240), max);
 
       iframe.style.height = newH + "px";
+      console.log(iframe.style.height);
       return;
     }
     
@@ -168,3 +170,4 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
