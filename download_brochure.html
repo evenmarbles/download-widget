@@ -224,6 +224,77 @@
 
   <script>
     (function () {
+      var lastSent = 0;
+
+      function getDocHeight() {
+        var body = document.body;
+        var html = document.documentElement;
+        return Math.max(
+          body.scrollHeight, body.offsetHeight,
+          html.clientHeight, html.scrollHeight, html.offsetHeight
+        );
+      }
+
+      function postHeight() {
+        var h = getDocHeight();
+        if (!h || !isFinite(h)) return;
+
+        // Avoid spamming tiny changes
+        if (Math.abs(h - lastSent) < 4) return;
+        lastSent = h;
+
+        window.parent.postMessage({ type: "BREVO_HEIGHT", height: h }, "*");
+      }
+
+      // Run a few times to catch late layout changes (fonts / Brevo init)
+      function burst() {
+        postHeight();
+        setTimeout(postHeight, 50);
+        setTimeout(postHeight, 150);
+        setTimeout(postHeight, 350);
+        setTimeout(postHeight, 800);
+        setTimeout(postHeight, 1400);
+      }
+
+      // Initial
+      if (document.readyState === "complete") burst();
+      else window.addEventListener("load", burst);
+
+      window.addEventListener("resize", postHeight);
+
+      // Observe the specific Brevo panels + container (covers error + success + field errors)
+      var targets = [
+        document.getElementById("sib-form-container"),
+        document.getElementById("sib-container"),
+        document.getElementById("error-message"),
+        document.getElementById("success-message")
+      ].filter(Boolean);
+
+      var mo = new MutationObserver(function () { postHeight(); });
+
+      targets.forEach(function (t) {
+        mo.observe(t, {
+          subtree: true,
+          childList: true,
+          characterData: true,
+          attributes: true,
+          attributeFilter: ["style", "class", "hidden", "aria-hidden"]
+        });
+      });
+
+      // Also catch layout changes not tied to DOM mutations (rare but happens)
+      if ("ResizeObserver" in window) {
+        var ro = new ResizeObserver(function () { postHeight(); });
+        targets.forEach(function (t) { ro.observe(t); });
+      }
+
+      // One last kick shortly after script runs
+      setTimeout(postHeight, 10);
+    })();
+  </script>
+
+  <script>
+    (function () {
       // Optional: pass utm_source from iframe URL into a hidden field (if present)
       try {
         var params = new URLSearchParams(window.location.search);
