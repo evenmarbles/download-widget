@@ -117,6 +117,7 @@
 
   // Listen for success from iframe (sent by brevo-form.html)
   window.addEventListener("message", (event) => {
+    console.log(event.data.type);
     if (!event || !event.data) return;
 
     // Resize message from brevo-form.html
@@ -172,5 +173,6 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
 
 
