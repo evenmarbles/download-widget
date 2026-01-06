@@ -42,8 +42,8 @@
     root.setAttribute("aria-modal", "true");
     root.innerHTML = `
       <div class="bpw-backdrop" data-bpw-close></div>
-      <div class=bpw-framewrap>
-        <div id="brevo-popup-modal" class="bpw-modal" role="document">
+      <div class="bpw-modal" role="document">
+        <div id="brevo-popup-modal" class=bpw-framewrap>
           <button class="bpw-close" type="button" aria-label="Close" data-bpw-close>×</button>
           <iframe title="Brochure download form" loading="eager"></iframe>
   
@@ -104,9 +104,12 @@
     root.setAttribute("data-open", "true");
     document.documentElement.style.overflow = "hidden";
 
+    const modal = document.getElementById(MODAL_ID);
+    modal.style.height = "407px";
+
     __bpw_lastIframeHeight = 0
+
     iframe.src = buildUrlWithUtm(formUrl, utmSource || "");
-    iframe.style.height = "395px";
     iframe.focus();
   }
 
@@ -185,6 +188,7 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
 
 
 
