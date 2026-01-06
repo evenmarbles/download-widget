@@ -271,7 +271,7 @@
   
         // Ignore tiny changes
         if (Math.abs(h - lastSent) < 8) return;
-        lastSent = h;
+        lastSent = h + 3;
   
         window.parent.postMessage({ type: "BREVO_HEIGHT", height: h }, "*");
       }
@@ -406,6 +406,7 @@
 </body>
 
 </html>
+
 
 
 
