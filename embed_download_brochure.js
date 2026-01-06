@@ -136,7 +136,6 @@
       const raw = Number(event.data.height);
       if (!Number.isFinite(raw) || raw <= 0) return;
 
-      // // Padding inside modal + keep within viewport
       const max = Math.floor(window.innerHeight * 0.86);
       const target = Math.min(Math.max(raw, 240), max);
 
@@ -150,6 +149,7 @@
         __bpw_lastIframeHeight = target;
         __bpw_resizeRaf = 0;
       });
+      
       return;
     }
     
@@ -185,6 +185,7 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
 
 
 
