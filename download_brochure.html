@@ -260,7 +260,6 @@
       }
 
       function postHeight() {
-        console.log("postHeight");
         var h = getDocHeight();
         if (!h || !isFinite(h)) return;
           
@@ -268,7 +267,6 @@
         if (Math.abs(h - lastSent) < 4) return;
         lastSent = h;
         
-        console.log("html: " + h);
         window.parent.postMessage({ type: "BREVO_HEIGHT", height: h }, "*");
       }
 
@@ -409,6 +407,7 @@
 </body>
 
 </html>
+
 
 
 
