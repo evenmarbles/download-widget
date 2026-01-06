@@ -129,7 +129,6 @@
       const iframe = root.querySelectorAll(".bpw-framewrap");
       if (!iframe) return;
       console.log(iframe[0]);
-      console.log(iframe[0].style);
 
       const raw = Number(event.data.height);
       if (!Number.isFinite(raw) || raw <= 0) return;
@@ -151,6 +150,7 @@
 
       for (let i = 0; i < iframe.length; i++) {
         iframe[i].style.height = newH + "px";
+        console.log(iframe[i]);
       }
 
       // iframe.style.height = newH + "px";
@@ -189,6 +189,7 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
 
 
 
