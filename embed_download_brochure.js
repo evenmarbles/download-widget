@@ -129,7 +129,7 @@
       const root = document.getElementById(ROOT_ID);
       if (!root) return;
 
-      const modal = root.getElementById(MODAL_ID);
+      const modal = document.getElementById(MODAL_ID);
       if (!modal) return;
       console.log(modal);
 
@@ -185,6 +185,7 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
 
 
 
