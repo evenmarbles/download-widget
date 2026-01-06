@@ -131,6 +131,7 @@
 
       const modal = root.getElementById(MODAL_ID);
       if (!modal) return;
+      console.log(modal);
 
       const raw = Number(event.data.height);
       if (!Number.isFinite(raw) || raw <= 0) return;
@@ -184,6 +185,7 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
 
 
 
