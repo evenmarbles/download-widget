@@ -2,6 +2,9 @@
   const STYLE_ID = "brevo-popup-widget-style";
   const ROOT_ID = "brevo-popup-widget-root";
 
+  let __bpw_lastIframeHeight = 0;
+  let __bpw_resizeRaf = 0;
+
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
     const css = `
@@ -188,6 +191,7 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
 
 
 
