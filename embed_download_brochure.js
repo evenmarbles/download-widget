@@ -126,7 +126,7 @@
       const root = document.getElementById(ROOT_ID);
       if (!root) return;
 
-      const iframe = root.querySelector(iframe);
+      const iframe = root.querySelector("iframe");
       if (!iframe) return;
 
       const raw = Number(event.data.height);
@@ -188,6 +188,7 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
 
 
 
