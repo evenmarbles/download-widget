@@ -136,18 +136,18 @@
       const max = Math.floor(window.innerHeight * 0.86);
       const newH = Math.min(Math.max(raw, 240), max);
 
-      // Hysteresis: ignore tiny changes that cause oscillation (scrollbar/wrapping)
-      if (Math.abs(target - __bpw_lastIframeHeight) < 12) return;
+      // // Hysteresis: ignore tiny changes that cause oscillation (scrollbar/wrapping)
+      // if (Math.abs(target - __bpw_lastIframeHeight) < 12) return;
   
-      // Debounce to next animation frame
-      if (__bpw_resizeRaf) cancelAnimationFrame(__bpw_resizeRaf);
-      __bpw_resizeRaf = requestAnimationFrame(() => {
-        iframe.style.height = target + "px";
-        __bpw_lastIframeHeight = target;
-        __bpw_resizeRaf = 0;
-      });
+      // // Debounce to next animation frame
+      // if (__bpw_resizeRaf) cancelAnimationFrame(__bpw_resizeRaf);
+      // __bpw_resizeRaf = requestAnimationFrame(() => {
+      //   iframe.style.height = target + "px";
+      //   __bpw_lastIframeHeight = target;
+      //   __bpw_resizeRaf = 0;
+      // });
 
-      // iframe.style.height = newH + "px";
+      iframe.style.height = newH + "px";
       return;
     }
     
@@ -183,6 +183,7 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
 
 
 
