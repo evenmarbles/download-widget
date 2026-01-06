@@ -249,53 +249,59 @@
   <script>
     (function () {
       var lastSent = 0;
-
-      function getDocHeight() {
-        var body = document.body;
-        var html = document.documentElement;
-        return Math.max(
-          body.scrollHeight, body.offsetHeight,
-          html.clientHeight, html.scrollHeight, html.offsetHeight
-        );
+      var rafId = 0;
+  
+      function getStableHeight() {
+        // Prefer the real Brevo container(s)
+        var el =
+          document.getElementById("sib-form-container") ||
+          document.getElementById("sib-container") ||
+          document.body;
+  
+        // scrollHeight handles expanded errors; offsetHeight handles normal box size
+        var h = Math.max(el.scrollHeight || 0, el.offsetHeight || 0);
+  
+        // Add body margins? We set margin:0 so no need.
+        return Math.ceil(h);
       }
-
+  
       function postHeight() {
-        var h = getDocHeight();
+        var h = getStableHeight();
         if (!h || !isFinite(h)) return;
-          
-        // Avoid spamming tiny changes
-        if (Math.abs(h - lastSent) < 4) return;
+  
+        // Ignore tiny changes
+        if (Math.abs(h - lastSent) < 8) return;
         lastSent = h;
-        
+  
         window.parent.postMessage({ type: "BREVO_HEIGHT", height: h }, "*");
       }
-
-      // Run a few times to catch late layout changes (fonts / Brevo init)
-      function burst() {
-        postHeight();
-        setTimeout(postHeight, 50);
-        setTimeout(postHeight, 150);
-        setTimeout(postHeight, 350);
-        setTimeout(postHeight, 800);
-        setTimeout(postHeight, 1400);
+  
+      function schedulePost() {
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(function () {
+          postHeight();
+          rafId = 0;
+        });
       }
-
-      // Initial
-      if (document.readyState === "complete") burst();
-      else window.addEventListener("load", burst);
-
-      window.addEventListener("resize", postHeight);
-
-      // Observe the specific Brevo panels + container (covers error + success + field errors)
+  
+      // Initial + after layout settles
+      if (document.readyState === "complete") schedulePost();
+      else window.addEventListener("load", schedulePost);
+  
+      setTimeout(schedulePost, 50);
+      setTimeout(schedulePost, 200);
+      setTimeout(schedulePost, 600);
+      setTimeout(schedulePost, 1200);
+  
+      // Watch just the Brevo containers/panels (success/error/inline errors)
       var targets = [
         document.getElementById("sib-form-container"),
         document.getElementById("sib-container"),
         document.getElementById("error-message"),
         document.getElementById("success-message")
       ].filter(Boolean);
-
-      var mo = new MutationObserver(function () { postHeight(); });
-
+  
+      var mo = new MutationObserver(schedulePost);
       targets.forEach(function (t) {
         mo.observe(t, {
           subtree: true,
@@ -305,15 +311,8 @@
           attributeFilter: ["style", "class", "hidden", "aria-hidden"]
         });
       });
-
-      // Also catch layout changes not tied to DOM mutations (rare but happens)
-      if ("ResizeObserver" in window) {
-        var ro = new ResizeObserver(function () { postHeight(); });
-        targets.forEach(function (t) { ro.observe(t); });
-      }
-
-      // One last kick shortly after script runs
-      setTimeout(postHeight, 10);
+  
+      window.addEventListener("resize", schedulePost);
     })();
   </script>
 
@@ -407,6 +406,7 @@
 </body>
 
 </html>
+
 
 
 
