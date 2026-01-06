@@ -266,12 +266,12 @@
       }
   
       function postHeight() {
-        var h = getStableHeight();
+        var h = getStableHeight() + 3;
         if (!h || !isFinite(h)) return;
   
         // Ignore tiny changes
         if (Math.abs(h - lastSent) < 8) return;
-        lastSent = h + 3;
+        lastSent = h;
   
         window.parent.postMessage({ type: "BREVO_HEIGHT", height: h }, "*");
       }
