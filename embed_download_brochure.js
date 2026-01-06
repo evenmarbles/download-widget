@@ -126,9 +126,8 @@
       const root = document.getElementById(ROOT_ID);
       if (!root) return;
 
-      const iframe = root.querySelectorAll(".bpw-framewrap");
+      const iframe = root.querySelector(iframe);
       if (!iframe) return;
-      console.log(iframe[0]);
 
       const raw = Number(event.data.height);
       if (!Number.isFinite(raw) || raw <= 0) return;
@@ -137,21 +136,21 @@
       const max = Math.floor(window.innerHeight * 0.86);
       const newH = Math.min(Math.max(raw, 240), max);
 
-      // // Hysteresis: ignore tiny changes that cause oscillation (scrollbar/wrapping)
-      // if (Math.abs(target - __bpw_lastIframeHeight) < 12) return;
+      // Hysteresis: ignore tiny changes that cause oscillation (scrollbar/wrapping)
+      if (Math.abs(target - __bpw_lastIframeHeight) < 12) return;
   
-      // // Debounce to next animation frame
-      // if (__bpw_resizeRaf) cancelAnimationFrame(__bpw_resizeRaf);
-      // __bpw_resizeRaf = requestAnimationFrame(() => {
-      //   iframe.style.height = target + "px";
-      //   __bpw_lastIframeHeight = target;
-      //   __bpw_resizeRaf = 0;
-      // });
+      // Debounce to next animation frame
+      if (__bpw_resizeRaf) cancelAnimationFrame(__bpw_resizeRaf);
+      __bpw_resizeRaf = requestAnimationFrame(() => {
+        iframe.style.height = target + "px";
+        __bpw_lastIframeHeight = target;
+        __bpw_resizeRaf = 0;
+      });
 
-      for (let i = 0; i < iframe.length; i++) {
-        iframe[i].style.height = newH + "px";
-        console.log(iframe[i]);
-      }
+      // for (let i = 0; i < iframe.length; i++) {
+      //   iframe[i].style.height = newH + "px";
+      //   console.log(iframe[i]);
+      // }
 
       // iframe.style.height = newH + "px";
       return;
@@ -189,6 +188,7 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
 
 
 
