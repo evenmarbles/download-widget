@@ -148,7 +148,11 @@
       //   __bpw_resizeRaf = 0;
       // });
 
-      iframe.style.height = newH + "px";
+      for (let i = 0; i < iframe.length; i++) {
+        iframe[i].style.height = newH + "px";
+      }
+
+      // iframe.style.height = newH + "px";
       return;
     }
     
@@ -184,6 +188,7 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
 
 
 
