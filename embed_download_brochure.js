@@ -128,7 +128,8 @@
 
       const iframe = root.querySelectorAll(".bpw-framewrap");
       if (!iframe) return;
-      console.log(iframe);
+      console.log(iframe[0]);
+      console.log(iframe[0].style);
 
       const raw = Number(event.data.height);
       if (!Number.isFinite(raw) || raw <= 0) return;
@@ -188,6 +189,7 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
 
 
 
