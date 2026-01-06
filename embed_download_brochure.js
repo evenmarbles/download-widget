@@ -125,10 +125,10 @@
       console.log("js: " + event.data.type);
       const root = document.getElementById(ROOT_ID);
       if (!root) return;
-      console.log("js: " + root);
 
       const iframe = root.querySelector("iframe");
       if (!iframe) return;
+      console.log(iframe);
 
       const raw = Number(event.data.height);
       if (!Number.isFinite(raw) || raw <= 0) return;
@@ -137,6 +137,7 @@
       const max = Math.floor(window.innerHeight * 0.86);
       const newH = Math.min(Math.max(raw, 240), max);
 
+      console.log(newH);
       iframe.style.height = newH + "px";
       return;
     }
@@ -173,6 +174,7 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
 
 
 
