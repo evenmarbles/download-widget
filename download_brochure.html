@@ -263,14 +263,11 @@
         var h = getDocHeight();
         if (!h || !isFinite(h)) return;
           
-        // Padding inside modal + keep within viewport
-        // const extra = 20; // breathing room
-        // const newH = h + extra;
-
         // Avoid spamming tiny changes
         if (Math.abs(h - lastSent) < 4) return;
         lastSent = h;
-
+        
+        consol.log("html: " + h);
         window.parent.postMessage({ type: "BREVO_HEIGHT", height: h }, "*");
       }
 
@@ -411,3 +408,4 @@
 </body>
 
 </html>
+
