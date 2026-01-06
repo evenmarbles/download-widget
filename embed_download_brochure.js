@@ -147,7 +147,7 @@
         __bpw_resizeRaf = 0;
       });
 
-      iframe.style.height = newH + "px";
+      // iframe.style.height = newH + "px";
       return;
     }
     
@@ -183,6 +183,7 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
 
 
 
