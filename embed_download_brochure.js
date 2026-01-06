@@ -105,6 +105,7 @@
     root.setAttribute("data-open", "true");
     document.documentElement.style.overflow = "hidden";
 
+    __bpw_lastIframeHeight = 0
     iframe.src = buildUrlWithUtm(formUrl, utmSource || "");
     iframe.style.height = "395px";
     iframe.focus();
@@ -191,6 +192,7 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
 
 
 
