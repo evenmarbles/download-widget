@@ -1,7 +1,7 @@
 (function () {
   const STYLE_ID = "brevo-popup-widget-style";
   const ROOT_ID = "brevo-popup-widget-root";
-  const MODAL_ID = "brevo-popup-modal";
+  const MODAL_ID = "brevo-popup-framewrap";
 
   let __bpw_lastIframeHeight = 0;
   let __bpw_resizeRaf = 0;
@@ -14,7 +14,7 @@
 #${ROOT_ID} .bpw-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55)}
 #${ROOT_ID} .bpw-modal{position:relative;width:min(92vw,540px);height:auto;max-height:86vh;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.35)}
 #${ROOT_ID} .bpw-close{position:absolute;top:10px;right:10px;z-index:3;border:0;background:rgba(0,0,0,.55);color:#fff;width:36px;height:36px;border-radius:999px;cursor:pointer;font-size:18px;line-height:36px}
-#${ROOT_ID} .bpw-framewrap{padding:0 0 25px 0}
+#${ROOT_ID} .framewrap{height:420px}
 #${ROOT_ID} iframe{border:0;width:100%;height:395px;display:block}
 #${ROOT_ID} .bpw-success{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:26px;text-align:center}
 #${ROOT_ID}[data-success="true"] iframe{display:none}
@@ -43,7 +43,7 @@
     root.innerHTML = `
       <div class="bpw-backdrop" data-bpw-close></div>
       <div class="bpw-modal" role="document">
-        <div id="brevo-popup-modal" class=bpw-framewrap>
+        <div id="brevo-popup-framewrap" class=bpw-framewrap>
           <button class="bpw-close" type="button" aria-label="Close" data-bpw-close>×</button>
           <iframe title="Brochure download form" loading="eager"></iframe>
   
@@ -105,11 +105,12 @@
     document.documentElement.style.overflow = "hidden";
 
     const modal = document.getElementById(MODAL_ID);
-    modal.style.height = "407px";
+    modal.style.height = "420px";
 
     __bpw_lastIframeHeight = 0
 
     iframe.src = buildUrlWithUtm(formUrl, utmSource || "");
+    iframe.style.height = "395px";
     iframe.focus();
   }
 
@@ -132,6 +133,9 @@
       const root = document.getElementById(ROOT_ID);
       if (!root) return;
 
+      const iframe = root.querySelector("iframe");
+      if (!iframe) return;
+
       const modal = document.getElementById(MODAL_ID);
       if (!modal) return;
       console.log(modal);
@@ -148,11 +152,12 @@
       // Debounce to next animation frame
       if (__bpw_resizeRaf) cancelAnimationFrame(__bpw_resizeRaf);
       __bpw_resizeRaf = requestAnimationFrame(() => {
-        modal.style.height = target + "px";
+        modal.style.height = target + 20 + "px";
         __bpw_lastIframeHeight = target;
         __bpw_resizeRaf = 0;
       });
       
+      iframe.style.height = target + "px";
       return;
     }
     
@@ -188,6 +193,7 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
 
 
 
