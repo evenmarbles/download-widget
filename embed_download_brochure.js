@@ -134,7 +134,7 @@
 
       // // Padding inside modal + keep within viewport
       const max = Math.floor(window.innerHeight * 0.86);
-      const newH = Math.min(Math.max(raw, 240), max);
+      const target = Math.min(Math.max(raw, 240), max);
 
       // Hysteresis: ignore tiny changes that cause oscillation (scrollbar/wrapping)
       if (Math.abs(target - __bpw_lastIframeHeight) < 12) return;
@@ -148,11 +148,11 @@
       });
 
       // for (let i = 0; i < iframe.length; i++) {
-      //   iframe[i].style.height = newH + "px";
+      //   iframe[i].style.height = target + "px";
       //   console.log(iframe[i]);
       // }
 
-      // iframe.style.height = newH + "px";
+      // iframe.style.height = target + "px";
       return;
     }
     
@@ -188,6 +188,7 @@
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
+
 
 
 
