@@ -157,7 +157,7 @@
             <div class="sib-form-block"
               style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#3c4858; background-color:transparent;">
               <div class="sib-text-form-block" style="padding-top: 10px">
-                <p>Enter your email to get the Suwannee River Sea Kayak Skills Expedition Brochure containing all the
+                <p>Enter your email to get the <span data-product-name></span> Brochure containing all the
                   important information right to your inbox.</p>
               </div>
             </div>
@@ -219,7 +219,7 @@
 
                   <div class="entry__field">
                     <input class="input " type="text" id="LEAD_MAGNET" name="LEAD_MAGNET" autocomplete="off" placeholder="LEAD_MAGNET" 
-                      value="Suwannee River Lead Magnet" data-required="true" required />
+                      value="" data-required="true" required />
                   </div>
                 </div>
 
@@ -335,12 +335,61 @@
   <script>
     (function () {
       // Optional: pass utm_source from iframe URL into a hidden field (if present)
+      var params;      
       try {
-        var params = new URLSearchParams(window.location.search);
-        var utm = params.get("utm_source") || "";
-        var utmEl = document.getElementById("UTM_SOURCE");
-        if (utmEl) utmEl.value = utm;
+        params = new URLSearchParams(window.location.search);
       } catch (e) {}
+
+      var utm = params.get("utm_source") || "";
+      var utmEl = document.getElementById("UTM_SOURCE");
+      if (utmEl) utmEl.value = utm;
+
+      var productName = params.get("product_name");
+      if (!productName) return;
+
+      // Basic safety: prevent HTML injection by assigning textContent
+      var el = document.querySelector("[data-product-name]");
+      if (el) el.textContent = productName;
+
+      var leadMagnet = (params.get("lead_magnet") || "").trim();
+      if (!leadMagnet) return;
+
+      var FIELD_ID = "LEAD_MAGNET"; // Brevo field id/name
+
+      function findField() {
+        // Try a few ways: id, name, within the Brevo form
+        var form = document.getElementById("sib-form");
+        if (form) {
+          return (
+            form.querySelector("#" + CSS.escape(FIELD_ID)) ||
+            form.querySelector('input[name="' + FIELD_ID + '"]') ||
+            form.querySelector('input[id="' + FIELD_ID + '"]')
+          );
+        }
+        return (
+          document.getElementById(FIELD_ID) ||
+          document.querySelector('input[name="' + FIELD_ID + '"]')
+        );
+      }
+
+      function setFieldValue(input, value) {
+        if (!input) return false;
+
+        // Don’t overwrite if user already typed something
+        if (input.value && input.value.trim() !== "") return true;
+
+        // Set both value and defaultValue (Brevo sometimes resets value to defaultValue)
+        input.value = value;
+        input.defaultValue = value;
+        input.setAttribute("value", value);
+
+        // Trigger events Brevo listens for
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        input.dispatchEvent(new Event("blur", { bubbles: true }));
+
+        return (input.value || "").trim() === value;
+      }
 
       // Cache email early (Brevo may wipe/replace the DOM on success)
       document.addEventListener("submit", function (e) {
@@ -389,6 +438,42 @@
         attributes: true,
         attributeFilter: ["style", "class", "hidden", "aria-hidden"]
       });
+
+      // Keep trying briefly because Brevo may replace nodes during init
+      var start = Date.now();
+      var maxMs = 5000; // try for up to 5 seconds
+      var interval = 50;
+      var timer = null;
+
+      function attempt() {
+        var el = findField();
+        var ok = setFieldValue(el, leadMagnet);
+
+        // Stop if set, or after timeout
+        if (ok || (Date.now() - start) > maxMs) {
+          if (timer) clearInterval(timer);
+          timer = null;
+          return;
+        }
+      }
+
+      // 1) Start immediately
+      attempt();
+
+      // 2) Poll for a short time (catches Brevo replacing inputs)
+      timer = setInterval(attempt, interval);
+
+      // 3) Also re-attempt when DOM changes (Brevo re-renders)
+      var mo = new MutationObserver(function () { attempt(); });
+      mo.observe(document.documentElement, { childList: true, subtree: true });
+
+      // 4) Re-attempt when Brevo finishes loading its script (extra nudge)
+      window.addEventListener("load", function () {
+        setTimeout(attempt, 0);
+        setTimeout(attempt, 150);
+        setTimeout(attempt, 400);
+        setTimeout(attempt, 900);
+      });
     })();
   </script>
 
@@ -422,15 +507,3 @@
 </body>
 
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
