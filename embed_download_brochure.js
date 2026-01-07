@@ -32,7 +32,7 @@
     document.head.appendChild(style);
   }
 
-  function ensureRoot() {
+  function ensureRoot(productName) {
     let root = document.getElementById(ROOT_ID);
     if (root) return root;
 
@@ -58,7 +58,7 @@
                 </svg>
               </div>
               <p class="bpw-text">
-                We&#039;ve sent the Suwannee River Sea Kayak Skills Expedition Brochure to
+                We&#039;ve sent the ${ productName } Brochure to
                 <span class="bpw-email" data-bpw-email></span>.
                 <br/>Check your inbox!
               </p>
@@ -82,22 +82,26 @@
     return root;
   }
 
-  function buildUrlWithUtm(url, utmSource) {
-    if (!utmSource) return url;
+  function buildUrlWithUtm(url, paramsObj) {
+    if (!paramsObj) return url;
     try {
       const u = new URL(url, window.location.href);
-      u.searchParams.set("utm_source", utmSource);
+      Object.entries(paramsObj).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && String(v).trim() !== "") {
+          u.searchParams.set(k, String(v));
+        }
+      });
       return u.toString();
     } catch (_) {
       // If URL is relative or invalid, fallback
       const sep = url.includes("?") ? "&" : "?";
-      return url + sep + "utm_source=" + encodeURIComponent(utmSource);
+      return url + sep + "utm_source=" + encodeURIComponent(paramsObj.utm_source);
     }
   }
 
-  function openPopup(formUrl, utmSource) {
+  function openPopup(formUrl, paramsObj) {
     injectStyles();
-    const root = ensureRoot();
+    const root = ensureRoot(paramsObj.product_name);
     const iframe = root.querySelector("iframe");
 
     root.setAttribute("data-success", "false");
@@ -109,7 +113,7 @@
 
     __bpw_lastIframeHeight = 0
 
-    iframe.src = buildUrlWithUtm(formUrl, utmSource || "");
+    iframe.src = buildUrlWithUtm(formUrl, paramsObj || {});
     iframe.style.height = "395px";
     iframe.focus();
   }
@@ -186,33 +190,16 @@
       return;
     }
 
+    const productName = btn.getAttribute("data-product-name") || "";
+    const leadMagnet = btn.getAttribute("data-lead-magnet") || "";
     const utm = btn.getAttribute("data-utm-source") || "";
-    openPopup(formUrl, utm);
+
+    openPopup(formUrl, {
+      product_name: productName,
+      lead_magnet: leadMagnet,
+      utem_source: utm
+    });
   });
 
   window.BrevoPopup = { open: openPopup, close: closePopup };
 })();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
