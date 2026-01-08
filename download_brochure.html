@@ -498,6 +498,74 @@
     })();
   </script>
 
+  <script>
+    (function () {
+      // Paste your n8n Webhook URL here later:
+      // Example: https://n8n.yourdomain.com/webhook/brevo-brochure-submit
+      var WEBHOOK_URL = "https://n8n2.ventureoutdoors.xyz/webhook-test/109e9c05-83e3-486f-ae5d-baab7a1ce82a";
+  
+      function safeStr(v) { return (v == null) ? "" : String(v).trim(); }
+  
+      function qs(name) {
+        try { return safeStr(new URLSearchParams(location.search).get(name)); }
+        catch (e) { return ""; }
+      }
+  
+      function collectPayload(form) {
+        var first = form.querySelector("#FIRSTNAME, input[name='FIRSTNAME']");
+        var last  = form.querySelector("#LASTNAME, input[name='LASTNAME']");
+        var email = form.querySelector("#EMAIL, input[name='EMAIL']");
+  
+        return {
+          event: "brevo_form_submit",
+          ts: new Date().toISOString(),
+          page_url: safeStr(location.href),
+          referrer: safeStr(document.referrer),
+          form_action: safeStr(form.getAttribute("action") || ""),
+          form_key: qs("form_key"),
+          product_name: qs("product_name"),
+          utm_source: qs("utm_source"),
+          firstname: safeStr(first && first.value),
+          lastname: safeStr(last && last.value),
+          email: safeStr(email && email.value)
+        };
+      }
+  
+      function sendToN8n(payload) {
+        if (!WEBHOOK_URL || WEBHOOK_URL === "N8N_WEBHOOK_URL_HERE") return;
+  
+        var body = JSON.stringify(payload);
+  
+        // Best effort: sendBeacon
+        try {
+          if (navigator.sendBeacon) {
+            var blob = new Blob([body], { type: "application/json" });
+            if (navigator.sendBeacon(WEBHOOK_URL, blob)) return;
+          }
+        } catch (e) {}
+  
+        // Fallback: fetch, fire-and-forget
+        try {
+          fetch(WEBHOOK_URL, {
+            method: "POST",
+            mode: "no-cors",
+            keepalive: true,
+            headers: { "Content-Type": "application/json" },
+            body: body
+          }).catch(function () {});
+        } catch (e) {}
+      }
+  
+      // Capture phase ensures we read values BEFORE Brevo scripts mutate the DOM
+      document.addEventListener("submit", function (e) {
+        var form = e.target;
+        if (!form || form.id !== "sib-form") return;
+  
+        sendToN8n(collectPayload(form));
+      }, true);
+    })();
+  </script>
+  
   <!-- Brevo-required globals (from your snippet) -->
   <script>
     window.REQUIRED_CODE_ERROR_MESSAGE = 'Please choose a country code';
@@ -528,3 +596,4 @@
 </body>
 
 </html>
+
