@@ -351,6 +351,27 @@
       var el = document.querySelector("[data-product-name]");
       if (el) el.textContent = productName;
 
+      var formKey = params.get("form_key");
+      if (!formKey) return;
+
+      // 🔒 ALLOWLIST: map keys → Brevo endpoints
+      var ACTION_MAP = {
+        "suwannee-brochure":
+          "https://4c74d77d.sibforms.com/serve/MUIFAPe7ZYzJjw8SfmEWHLnKpRWgyuVyjaDPNgl7kQzHKKeSTJpB4597lB-4SvKM7-6maHX9JYBVR7DI2lEV118KkE3mZbpeV7wWU57XHXBtl64-uBWZkjVxhrtk1kVJeI_sb9r2DU0QwPdXnctfxcHqL9UAy67L3PKWDB1nfHsNd49nvEUJ5cteV3SnDJqjBaAiN2yONZxsymNL",
+
+        "everglades-brochure":
+          "https://XXXXXXX.sibforms.com/serve/XXXXXXXXXXXX"
+      };
+
+      var action = ACTION_MAP[formKey];
+      if (!action)
+        action = ACTION_MAP["suwannee-brochure"];
+
+      var form = document.getElementById("sib-form");
+      if (form) {
+        form.setAttribute("action", action);
+      }
+
       var leadMagnet = (params.get("lead_magnet") || "").trim();
       if (!leadMagnet) return;
 
