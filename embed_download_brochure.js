@@ -192,11 +192,13 @@
 
     const productName = btn.getAttribute("data-product-name") || "";
     const leadMagnet = btn.getAttribute("data-lead-magnet") || "";
+    const formKey = btn.getAttribute("data-form-key") || "";
     const utm = btn.getAttribute("data-utm-source") || "";
 
     openPopup(formUrl, {
       product_name: productName,
       lead_magnet: leadMagnet,
+      form_key: formKey,
       utem_source: utm
     });
   });
